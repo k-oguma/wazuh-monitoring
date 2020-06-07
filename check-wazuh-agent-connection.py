@@ -4,7 +4,6 @@ import json
 import os
 import sys
 import requests  # To install requests, use: pip3 install requests
-from typing import Dict, List, Any, Union
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 
 
@@ -37,19 +36,6 @@ class RequestWazuh:
             if item["status"] != "Active":
                 res.append({"status": item["status"], "name": item["name"], "wazuh_id": item["id"]})
         return res
-
-    def show(self, json_data, *, word):
-        try:
-            switch: Dict[str, Union[List[Dict[str, Any]], str]] = dict(
-                inactive=self.inactive_agent(json_data),
-                status='Two'
-            )
-        except ValueError as e:
-            raise e
-        finally:
-            pass
-
-        return switch.get(word)
 
     def request(self, **kwargs):
         __query = kwargs["query"].replace("\n", "")
@@ -107,18 +93,18 @@ class RequestWazuh:
         with open(kwargs["id_file"]) as f:
             for __agent_id in f.readlines():
                 recovery_final_answer, agent = r.is_active(r, __agent_id, kwargs["auth"])
-                if not recovery_final_answer:
+                if recovery_final_answer:
+                    return False, None  # no erroneous judgment
+                else:
                     # In final check, Are agents all actives? / no:
-                    # Probably, past check was false negative, so go back
+                    # Probably, there is like a false negative, so should be go back
                     # the 'check inactive agents' of monitoring process.
-                    raise ConnectionError(f"{agent} is inactive")
-
-            f.close()
+                    return True, f"{agent} is still inactive"
 
     @staticmethod
     def show_inactive_agents(r, json_data, id_file):
         alert_box = []
-        for item in r.show(json_data, word="inactive"):
+        for item in r.inactive_agent(json_data):
             # Create inactive agents list because it for prevent the erroneous determination of the
             # normality when final checks, and thus the accuracy of the normality determination is improved.
             # So that check at /agents/${ID} and more.
@@ -155,7 +141,8 @@ def main():
 
     if has_inactive_agents:
         # Alert
-        raise ConnectionError(alert_box)
+        print(alert_box)
+        exit(1)
 
     # If the agent that was determined to be abnormal last time does not exist, it ends normally.
     if not os.path.isfile(agent_id_file):
@@ -208,4 +195,3 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     main()
-
