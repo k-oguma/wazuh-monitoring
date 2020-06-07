@@ -75,10 +75,11 @@ class RequestWazuh:
             f.close
 
     @staticmethod
-    def has_false_determination(r, **kwargs):
+    def has_erroneous_judgment(r, **kwargs):
+        # Preparation: If already deleted agent after previous checks, will delete the ID in the inactive agent list.
         with open(kwargs["id_file"]) as f:
             for __agent_id in f.readlines():
-                # Wazuh's error number 1701 like a status code 404.
+                # [Memo] Wazuh's error number 1701 like a status code 404.
                 # So we can't use the following condition.
                 #   if not res.ok or res.status_code == 404:
                 if not r.has_agent(__agent_id, kwargs["auth"]):
@@ -151,7 +152,11 @@ def main():
     # Final confirmation of the failed judged agent at past. Validate whether any of
     # erroneous determination of the normal.
     # Also, if a already deleted agent, remove id in the inactive agent id list file.
-    r.has_false_determination(r, id_file=agent_id_file, auth=__auth)
+    misjudgment, msg = r.has_erroneous_judgment(r, id_file=agent_id_file, auth=__auth)
+
+    if misjudgment:
+        print(msg)
+        exit(1)
 
     os.remove(agent_id_file)
     exit(0)
