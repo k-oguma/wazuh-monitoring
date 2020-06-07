@@ -43,15 +43,16 @@ In the Wazuh manager.
 0
 ```
 
+or
+
+```sh
+(venv) [k-oguma@ip-172-30-0-100 ~]$ ./check-wazuh-agent-connnection.py -u foo -p bar -i
+```
+
 ### Abnormal (e.g. Disconnected)
 
 ```sh
 (venv) [k-oguma@ip-172-30-0-100 ~]$ ./check-wazuh-agent-connnection.py -i
-Traceback (most recent call last):
-  File "./check-wazuh-agent-connnection.py", line 191, in <module>
-    main()
-  File "./check-wazuh-agent-connnection.py", line 162, in main
-    raise ConnectionError(alert_box)
 ConnectionError: [{'status': 'Disconnected', 'name': 'linux-agent_for_docker', 'wazuh_id': '005'}]
 (venv) [k-oguma@ip-172-30-0-100 ~]$ echo $?
 1
