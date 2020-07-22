@@ -149,6 +149,11 @@ def main():
     if not os.path.isfile(agent_id_file):
         exit(0)
 
+    # If the agent_id_file exists and is empty, the file will be deleted.
+    if os.stat(agent_id_file).st_size == 0:
+        os.remove(agent_id_file)
+        exit(0)
+
     # Final confirmation of the failed judged agent at past. Validate whether any of
     # erroneous determination of the normal.
     # Also, if a already deleted agent, remove id in the inactive agent id list file.
@@ -157,9 +162,6 @@ def main():
     if misjudgment:
         print(msg)
         exit(1)
-
-    os.remove(agent_id_file)
-    exit(0)
 
 
 class HostAction(argparse.Action):
